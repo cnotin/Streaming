@@ -31,7 +31,7 @@ class PullProtocol(Protocol):
 	def sendCurrentImage(self):
 		if self.image_id == len(self.images):
 			self.image_id = 1
-		print "j'envoie l'image %s" % self.image_id
+		#print "j'envoie l'image %s" % self.image_id
 		self.sendMessage("%s%s%s%s%s" % (self.image_id, SEP, len(self.images[self.image_id]), SEP,  self.images[self.image_id]))
 		self.image_id += 1
 
@@ -43,7 +43,7 @@ class TCPPull(LineReceiver):
 		pass
 
 	def lineReceived(self, line):
-		print "TCP PULL = " + line
+		#print "TCP PULL = " + line
 		if (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.pullFactory)
