@@ -1,13 +1,11 @@
-﻿from twisted.internet.protocol import Protocol, Factory
-from twisted.internet import reactor
-from twisted.protocols.basic import LineReceiver
 from catalogue import Catalogue
-
+from twisted.internet import reactor
+from twisted.internet.protocol import Factory
+from twisted.protocols.basic import LineReceiver
 
 class ServeurHttp(LineReceiver):
         def __init__(self):
-                self.cat = Catalogue("catalogue.txt")
-
+                self.delimiter = "\n"
         def __del__(self):
                 pass
 
@@ -18,20 +16,27 @@ class ServeurHttp(LineReceiver):
                 return msg
 
         def lineReceived(self, line):
+                #on a un GET mais pas pour le catalogue => dégage
+                if ((line.find("GET") == 0) and (line.find("GET /catalogue") == -1)):
+                        self.transport.loseConnection()
                 if (line.find("GET /catalogue") != -1):
-                        self.transport.write(self.addHeader(self.cat.getCatalogue()))
-                #self.transport.loseConnection()
+                        self.transport.write(self.addHeader(self.factory.cat.getCatalogue()))
+
+                
 
         def connectionMade(self):
                 print "client connecté"
 
+class ServeurHTTPFactory(Factory):
+        protocol = ServeurHttp
+
+        def __init__(self):
+                self.cat = Catalogue("catalogue.txt")
+
 
 def main():
         print "Welcome"
-        f = Factory()
-        f.protocol = ServeurHttp
-        reactor.listenTCP(4590, f)
-        #stdio.StandardIO(ServeurHttp())
+        reactor.listenTCP(4590, ServeurHTTPFactory())
         reactor.run()
 
 if __name__ == '__main__':

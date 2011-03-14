@@ -8,13 +8,14 @@ class Catalogue():
                 self.servAddr = temp[0].split(": ")[1].strip()
                 self.servPort = int(temp[1].split(": ")[1])
                 for line in temp[2:]:
-                        id = int(line.split("=")[1].split(" ")[0])
-                        name = line.split("=")[2].split(" ")[0]
-                        type = line.split("=")[3].split(" ")[0]
-                        addr = line.split("=")[4].split(" ")[0]
-                        port = int(line.split("=")[5].split(" ")[0])
-                        protocole = line.split("=")[6].split(" ")[0]
-                        ips = float(line.split("=")[7].split(" ")[0])
+                        splittedLine = line.split("=")
+                        id = int(splittedLine[1].split(" ")[0])
+                        name = splittedLine[2].split(" ")[0]
+                        type = splittedLine[3].split(" ")[0]
+                        addr = splittedLine[4].split(" ")[0]
+                        port = int(splittedLine[5].split(" ")[0])
+                        protocole = splittedLine[6].split(" ")[0]
+                        ips = float(splittedLine[7].split(" ")[0])
                         self.objects.append((id, name, type, addr, port, protocole, ips))
 
 
