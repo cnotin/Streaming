@@ -13,9 +13,9 @@ SEP = "\r\n"
 def gotProtocol(p):
 	p.factory.client = p
 
-class PullProtocol(Protocol):
+class TCPPullData(Protocol):
 	def __init__(self):
-		print "creation pull proto"
+		print "constructeur TCPPullDataProtocol"
 		self.image_id = 1
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
@@ -36,7 +36,7 @@ class PullProtocol(Protocol):
 		self.image_id += 1
 
 
-class TCPPull(LineReceiver):
+class TCPPullControl(LineReceiver):
 	def __init__(self):
 		pass
 	def __del__(self):
@@ -46,23 +46,23 @@ class TCPPull(LineReceiver):
 		#print "TCP PULL = " + line
 		if (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
-			d = point.connect(self.factory.pullFactory)
+			d = point.connect(self.factory.tcpPullDataFactory)
 			d.addCallback(gotProtocol)
 		elif (line.find("GET -1") == 0):
-			if ("client" in self.factory.pullFactory.__dict__):
-				self.factory.pullFactory.client.sendCurrentImage()
+			if ("client" in self.factory.tcpPullDataFactory.__dict__):
+				self.factory.tcpPullDataFactory.client.sendCurrentImage()
 			
 
 	def connectionMade(self):
 		print "TCP pull connecté !"
 
-class TCPPullFactory(Factory):
-	protocol = TCPPull
-	pullFactory = None
+class TCPPullControlFactory(Factory):
+	protocol = TCPPullControl
+	tcpPullDataFactory = None
 
 	def __init__(self):
-		self.pullFactory = Factory()
-		self.pullFactory.protocol = PullProtocol
+		self.tcpPullDataFactory = Factory()
+		self.tcpPullDataFactory.protocol = TCPPullData
 
 
 
@@ -98,7 +98,7 @@ class ServeurHTTPFactory(Factory):
 		self.cat = Catalogue("catalogue.txt")
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
-				reactor.listenTCP(objet[4], TCPPullFactory())
+				reactor.listenTCP(objet[4], TCPPullControlFactory())
 
 
 def main():
