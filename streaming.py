@@ -73,9 +73,9 @@ class ServeurHttp(LineReceiver):
 		pass
 
 	def addHeader(self, msg):
-		header = "HTTP/1.1 200 OK\r\nServer: localhost\r\nConnection: Keep-Alive\r\nContent-Type: text/txt\r\nContent-Length: "
+		header = "HTTP/1.1 200 OK" + SEP + "Server: localhost" + SEP + "Connection: Keep-Alive" + SEP + "Content-Type: text/txt" + SEP + "Content-Length: "
 		header += str(len(msg))
-		msg = header + "\r\n\r\n" + msg
+		msg = header + SEP + SEP + msg
 		return msg
 
 	def lineReceived(self, line):
