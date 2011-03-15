@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from catalogue import Catalogue
+import glob
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Factory
@@ -10,35 +11,31 @@ from twisted.protocols.basic import LineReceiver
 PRON = "pr0n\\"
 SEP = "\r\n"
 
-def gotProtocol(p):
-	p.factory.client = p
+def gotProtocol(p, tcpPullControl):
+	print "port distant %s" % tcpPullControl.transport.getPeer().port
+	tcpPullControl.dataChannels[str(tcpPullControl.transport.getPeer().port)] = p
+	#p.factory.client = p
 
 class TCPPullData(Protocol):
 	def __init__(self):
 		print "constructeur TCPPullDataProtocol"
 		self.image_id = 1
-		self.images = []
-		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
-		for i in range(1,148):
-			print "image %s" % i
-			f = open(PRON + "mavideo\\img" + str(i) + ".jpg", "rb")
-			self.images.append(f.read())
-			f.close()
 		
 	def sendMessage(self, message):
 		self.transport.write(message)
 		
-	def sendCurrentImage(self):
-		if self.image_id == len(self.images):
+	def sendCurrentImage(self, images):
+		if self.image_id == len(images):
 			self.image_id = 1
 		#print "j'envoie l'image %s" % self.image_id
-		self.sendMessage("%s%s%s%s%s" % (self.image_id, SEP, len(self.images[self.image_id]), SEP,  self.images[self.image_id]))
+		self.sendMessage("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
 		self.image_id += 1
 
 
 class TCPPullControl(LineReceiver):
 	def __init__(self):
-		pass
+		self.dataChannels = {}
+
 	def __del__(self):
 		pass
 
@@ -47,22 +44,35 @@ class TCPPullControl(LineReceiver):
 		if (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.tcpPullDataFactory)
-			d.addCallback(gotProtocol)
+			d.addCallback(gotProtocol, self)
 		elif (line.find("GET -1") == 0):
-			if ("client" in self.factory.tcpPullDataFactory.__dict__):
-				self.factory.tcpPullDataFactory.client.sendCurrentImage()
+			if str(self.transport.getPeer().port) in self.dataChannels:
+				self.dataChannels[str(self.transport.getPeer().port)].sendCurrentImage(self.factory.images)
 			
 
 	def connectionMade(self):
 		print "TCP pull connecté !"
 
+
 class TCPPullControlFactory(Factory):
 	protocol = TCPPullControl
 	tcpPullDataFactory = None
 
-	def __init__(self):
+	def __init__(self, movie):
 		self.tcpPullDataFactory = Factory()
 		self.tcpPullDataFactory.protocol = TCPPullData
+
+		self.images = []
+		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
+
+		imagesPath = PRON + movie + "\\"
+		countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		for i in range(1, countImages + 1):
+			#print "image %s" % i
+			f = open(imagesPath + str(i) + ".jpg", "rb")
+			self.images.append(f.read())
+			f.close()
+		print "a chargé %d images pour %s" % (countImages, movie)
 
 
 
@@ -98,7 +108,7 @@ class ServeurHTTPFactory(Factory):
 		self.cat = Catalogue("catalogue.txt")
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
-				reactor.listenTCP(objet[4], TCPPullControlFactory())
+				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
 
 
 def main():
