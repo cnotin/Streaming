@@ -12,14 +12,16 @@ PRON = "pr0n\\"
 SEP = "\r\n"
 
 def gotProtocol(p, tcpPullControl):
-	print "port distant %s" % tcpPullControl.transport.getPeer().port
-	tcpPullControl.dataChannels[str(tcpPullControl.transport.getPeer().port)] = p
-	#p.factory.client = p
+	tcpPullControl.clientProtocol = p
+
 
 class TCPPullData(Protocol):
 	def __init__(self):
 		print "constructeur TCPPullDataProtocol"
 		self.image_id = 1
+
+	def __del__(self):
+		print "Fermeture connexion données"
 		
 	def sendMessage(self, message):
 		self.transport.write(message)
@@ -34,10 +36,10 @@ class TCPPullData(Protocol):
 
 class TCPPullControl(LineReceiver):
 	def __init__(self):
-		self.dataChannels = {}
+		self.clientProtocol = None
 
 	def __del__(self):
-		pass
+		print "Fermeture connexion contrôle"
 
 	def lineReceived(self, line):
 		#print "TCP PULL = " + line
@@ -46,12 +48,11 @@ class TCPPullControl(LineReceiver):
 			d = point.connect(self.factory.tcpPullDataFactory)
 			d.addCallback(gotProtocol, self)
 		elif (line.find("GET -1") == 0):
-			if str(self.transport.getPeer().port) in self.dataChannels:
-				self.dataChannels[str(self.transport.getPeer().port)].sendCurrentImage(self.factory.images)
-			
+			if self.clientProtocol:
+				self.clientProtocol.sendCurrentImage(self.factory.images)
 
 	def connectionMade(self):
-		print "TCP pull connecté !"
+		print "TCP PULL contrôle connecté !"
 
 
 class TCPPullControlFactory(Factory):
@@ -91,9 +92,7 @@ class ServeurHttp(LineReceiver):
 	def lineReceived(self, line):
 		print "HTTP = " + line
 		#on a un GET mais pas pour le catalogue => dégage
-		if ((line.find("GET") == 0) and (line.find("GET /catalog") == -1)):
-			self.transport.loseConnection()
-		if (line.find("GET /catalog") != -1):
+		if (line.find("GET") != -1):
 			self.transport.write(self.addHeader(self.factory.cat.getCatalogue()))
 
 	def connectionMade(self):
