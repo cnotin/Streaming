@@ -22,15 +22,13 @@ class TCPPullData(Protocol):
 
 	def __del__(self):
 		print "Fermeture connexion données"
-		
-	def sendMessage(self, message):
-		self.transport.write(message)
-		
+
+	
 	def sendCurrentImage(self, images):
 		if self.image_id == len(images):
 			self.image_id = 1
 		#print "j'envoie l'image %s" % self.image_id
-		self.sendMessage("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
+		self.transport.write("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
 		self.image_id += 1
 
 
