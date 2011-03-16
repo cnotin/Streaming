@@ -41,13 +41,14 @@ class TCPPullControl(LineReceiver):
 
 	def lineReceived(self, line):
 		#print "TCP PULL = " + line
-		if (line.find("LISTEN_PORT") == 0):
+		if (line.find("GET -1") == 0):
+			if self.clientProtocol:
+				self.clientProtocol.sendCurrentImage(self.factory.images)
+		elif (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.tcpPullDataFactory)
 			d.addCallback(gotProtocol, self)
-		elif (line.find("GET -1") == 0):
-			if self.clientProtocol:
-				self.clientProtocol.sendCurrentImage(self.factory.images)
+		
 
 	def connectionMade(self):
 		print "TCP PULL contrôle connecté !"
