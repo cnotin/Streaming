@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from HTTP import *
-from TCPPull import *
 from twisted.internet import reactor
 
 
