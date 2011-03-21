@@ -66,7 +66,10 @@ class TCPPullControlFactory(Factory):
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 
 		imagesPath = PRON + movie + "\\"
-		countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		if movie == "tophat":
+			countImages = 99
+		else:
+			countImages = len(glob.glob1(imagesPath,"*.jpg"))
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
 			f = open(imagesPath + str(i) + ".jpg", "rb")
