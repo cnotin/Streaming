@@ -2,6 +2,7 @@
 
 
 from TCPPull import TCPPullControlFactory
+from UDPPull import UDPPullControl
 from TCPPush import TCPPushControlFactory
 from catalogue import Catalogue
 from streaming import SEP
@@ -43,3 +44,6 @@ class ServeurHTTPFactory(Factory):
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
 			if objet[5] == "TCP_PUSH":
 				reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
+			elif objet[5] == "UDP_PULL":
+				reactor.listenUDP(objet[4], UDPPullControl(objet[1]))
+			
