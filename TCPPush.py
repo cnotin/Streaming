@@ -12,12 +12,13 @@ from twisted.internet import reactor
 
 def gotProtocol(p, tcpPushControl, fps):
 	tcpPushControl.clientProtocol = p
-	p.pauseTime = 1/fps
+	p.pauseTime = 1./fps
 
 class TCPPushData(Protocol):
 	def __init__(self):
 		print "constructeur TCPPushDataProtocol"
 		self.image_id = 1
+		self.isSending = False
 
 	def __del__(self):
 		self.transport.loseConnection()
@@ -28,7 +29,7 @@ class TCPPushData(Protocol):
 		if self.isSending :
 			if self.image_id == len(images):
 				self.image_id = 1
-			#print "j'envoie l'image %s, pause = %s" % (self.image_id, 1/self.fps)
+			print "j'envoie l'image %s" % self.image_id
 			# Tenative d'optimisation :
 			#sender = FileSender()
 			#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
@@ -47,11 +48,14 @@ class TCPPushControl(LineReceiver):
 		print "Fermeture connexion contrôle"
 
 	def lineReceived(self, line):
-		#print "TCP PUSH = " + line
+		print "TCP PUSH = " + line
 		if (line.find("START") == 0):
 			if self.clientProtocol:
 				self.clientProtocol.isSending = True
 				self.clientProtocol.sendCurrentImage(self.factory.images)
+			else:
+				#print "tcp push appel moi plus tard"
+				reactor.callLater(0, self.lineReceived, line)
 
 		elif (line.find("PAUSE") == 0):
 			self.clientProtocol.isSending = False
