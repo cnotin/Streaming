@@ -30,7 +30,8 @@ class TCPPullData(Protocol):
 		#sender = FileSender()
 		#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
 		#sender.beginFileTransfer(output, self.transport, None)
-		self.transport.write("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
+
+		self.transport.write(images[self.image_id])
 		self.image_id += 1
 
 
@@ -50,6 +51,8 @@ class TCPPullControl(LineReceiver):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.tcpPullDataFactory)
 			d.addCallback(gotProtocol, self)
+		elif (line.find("END") == 0):
+			self.transport.loseConnection()
 
 
 	def connectionMade(self):
@@ -75,7 +78,8 @@ class TCPPullControlFactory(Factory):
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
 			f = open(imagesPath + str(i) + ".jpg", "rb")
-			self.images.append(f.read())
+			imageData = f.read()
+			self.images.append("%s%s%s%s%s" % (i, SEP, len(imageData), SEP,  imageData))
 			f.close()
 		print "a chargé %d images pour %s" % (countImages, movie)
 
