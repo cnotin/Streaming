@@ -47,6 +47,10 @@ class TCPPullControl(LineReceiver):
 		if (line.find("GET -1") == 0):
 			if self.clientProtocol:
 				self.clientProtocol.sendCurrentImage(self.factory.images)
+			else:
+				#print "tcppull appel moi plus tard"
+				reactor.callLater(0, self.lineReceived, line)
+				
 		elif (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.tcpPullDataFactory)
