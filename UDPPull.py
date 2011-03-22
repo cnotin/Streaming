@@ -81,6 +81,8 @@ class UDPPullControl(DatagramProtocol):
 				self.clients[host+":%s" % port]["imagecourante"]= 1
 				self.clients[host+":%s" % port]["packagecourant"]=0
 				print "image"
+			elif (line.find("END") == 0):
+				del self.clients[host+":%s" % port]
 				#self.transport.connect(host,int(line.split(" ")[1])
 				#point = UDP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 				#d = point.connect(self.factory.UDPPullDataFactory)
