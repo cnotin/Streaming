@@ -26,7 +26,7 @@ class TCPPullData(Protocol):
 	def sendCurrentImage(self, images):
 		if self.image_id == len(images):
 			self.image_id = 1
-		print "j'envoie l'image %s" % self.compteur
+		#print "j'envoie l'image %s" % self.compteur
 		# Tenative d'optimisation :
 		#sender = FileSender()
 		#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))

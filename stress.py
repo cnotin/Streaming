@@ -3,6 +3,8 @@
 from twisted.internet import reactor
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.endpoints import TCP4ClientEndpoint
+from twisted.internet.error import CannotListenError
+
 import time
 
 SEP = "\r\n"
@@ -11,6 +13,7 @@ def tcpPullConnected(p, video):
 	p.launch(video)
 
 class TCPPullData(Protocol):
+#un par client
 	def __init__(self):
 		self.taille = 0
 		self.startTime = time.time()
@@ -18,25 +21,39 @@ class TCPPullData(Protocol):
 	
 	def dataReceived(self, data):
 		self.taille += len(data)
-		print "débit (ko/s) %d" % (self.taille / (time.time() - self.startTime) / 1000)
+		if self.taille > 10000:
+			print time.time() - self.startTime
+			print "débit (ko/s) %d" % (self.taille / (time.time() - self.startTime) / 1000)
 	
 	
 class TCPPullDataFactory(Factory):
 	protocol = TCPPullData	
 	
 class StressTCPPull(Protocol):
+#un par vidéo
 	def __init__(self):
 		print "création StressTCPPull"
 		self.compteur = 0
+		self.port = 4690
 		
 	def launch(self, video):
 		print "lancement stress tcp pull " + str(video)
-		reactor.listenTCP(4690, TCPPullDataFactory())
-		self.transport.write("LISTEN_PORT 4690" + SEP)
+		portFound = False
+		while not portFound:
+			try:
+				reactor.listenTCP(self.port, TCPPullDataFactory())
+			except CannotListenError:
+				print "erreur port %s" % self.port
+				self.port += 1
+			else:
+				portFound = True
+		self.transport.setTcpNoDelay(True)
+		self.transport.write("GET 1" + SEP)
+		self.transport.write("LISTEN_PORT " + str(self.port) + SEP)
 		self.stress()
 	
 	def stress(self):
-		print "bim %s" % self.compteur
+		#print "bim %s" % self.compteur
 		self.transport.write("GET -1" + SEP)
 		self.compteur += 1
 		reactor.callLater(0, self.stress)
@@ -87,7 +104,8 @@ def main():
 	print "Welcome"
 	factory = Factory()
 	factory.protocol = Catalogue
-	point = TCP4ClientEndpoint(reactor, "localhost", 4590)
+	#point = TCP4ClientEndpoint(reactor, "localhost", 4590)
+	point = TCP4ClientEndpoint(reactor, "192.168.1.24", 5000)
 	d = point.connect(factory)
 	d.addCallback(catalogueConnected)
 	reactor.run()
