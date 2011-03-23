@@ -3,22 +3,21 @@
 import glob
 from streaming import PRON
 from streaming import SEP
+from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
+from twisted.internet.task import LoopingCall
 from twisted.protocols.basic import LineReceiver
-from twisted.internet import reactor
 
 
-def gotProtocol(p, tcpPushControl, fps):
+def gotProtocol(p, tcpPushControl):
 	tcpPushControl.clientProtocol = p
-	p.pauseTime = 1./fps
 
 class TCPPushData(Protocol):
 	def __init__(self):
 		print "constructeur TCPPushDataProtocol"
 		self.image_id = 1
-		self.isSending = False
 
 	def __del__(self):
 		self.transport.loseConnection()
@@ -26,23 +25,22 @@ class TCPPushData(Protocol):
 
 
 	def sendCurrentImage(self, images):
-		if self.isSending :
-			if self.image_id == len(images):
-				self.image_id = 1
-			print "j'envoie l'image %s" % self.image_id
-			# Tenative d'optimisation :
-			#sender = FileSender()
-			#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
-			#sender.beginFileTransfer(output, self.transport, None)
+		if self.image_id == len(images):
+			self.image_id = 1
+		#print "j'envoie l'image %s" % self.image_id
+		# Tenative d'optimisation :
+		#sender = FileSender()
+		#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
+		#sender.beginFileTransfer(output, self.transport, None)
 
-			self.transport.write(images[self.image_id])
-			self.image_id += 1
-			reactor.callLater(self.pauseTime, self.sendCurrentImage, images)
+		self.transport.write(images[self.image_id])
+		self.image_id += 1
 
 
 class TCPPushControl(LineReceiver):
 	def __init__(self):
 		self.clientProtocol = None
+		self.lc = None
 
 	def __del__(self):
 		print "Fermeture connexion contrôle"
@@ -51,23 +49,27 @@ class TCPPushControl(LineReceiver):
 		print "TCP PUSH = " + line
 		if (line.find("START") == 0):
 			if self.clientProtocol:
-				self.clientProtocol.isSending = True
-				self.clientProtocol.sendCurrentImage(self.factory.images)
+				self.isSending = True
+				if not self.lc:
+					self.lc = LoopingCall(self.clientProtocol.sendCurrentImage, self.factory.images)
+				self.lc.start(1./self.factory.fps)
 			else:
 				#print "tcp push appel moi plus tard"
 				reactor.callLater(0, self.lineReceived, line)
 
 		elif (line.find("PAUSE") == 0):
-			self.clientProtocol.isSending = False
+			self.isSending = False
+			self.lc.stop()
 
 		elif (line.find("LISTEN_PORT") == 0):
 			point = TCP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 			d = point.connect(self.factory.tcpPushDataFactory)
-			d.addCallback(gotProtocol, self, self.factory.fps)
+			d.addCallback(gotProtocol, self)
 
 		elif (line.find("END") == 0):
 			self.transport.loseConnection()
-			self.clientProtocol.isSending = False
+			if self.isSending:
+				self.lc.stop()
 			del self.clientProtocol
 
 	def connectionMade(self):
