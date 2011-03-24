@@ -1,5 +1,5 @@
 class Catalogue():
-	def __init__(self, fichier):
+	def __init__(self, fichier, ip):
 		self.fichier = fichier
 		self.objects = []
 
@@ -13,6 +13,7 @@ class Catalogue():
 			name = splittedLine[2].split(" ")[0]
 			type = splittedLine[3].split(" ")[0]
 			addr = splittedLine[4].split(" ")[0]
+			addr = addr.replace("MYIP", ip)
 			port = int(splittedLine[5].split(" ")[0])
 			protocole = splittedLine[6].split(" ")[0]
 			ips = float(splittedLine[7].split(" ")[0])

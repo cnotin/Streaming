@@ -25,7 +25,6 @@ class ServeurHttp(LineReceiver):
 
 	def lineReceived(self, line):
 		print "HTTP = " + line
-		#on a un GET mais pas pour le catalogue => dégage
 		if (line.find("GET") != -1):
 			self.transport.write(self.addHeader(self.factory.cat.getCatalogue()))
 
@@ -37,8 +36,8 @@ class ServeurHttp(LineReceiver):
 class ServeurHTTPFactory(Factory):
 	protocol = ServeurHttp
 
-	def __init__(self):
-		self.cat = Catalogue("catalogue.txt")
+	def __init__(self, ip):
+		self.cat = Catalogue("catalogue.txt", ip)
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
