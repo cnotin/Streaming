@@ -2,8 +2,8 @@
 
 
 from TCPPull import TCPPullControlFactory
-from UDPPull import UDPPullControl
 from TCPPush import TCPPushControlFactory
+from UDPPull import UDPPullControl
 from catalogue import Catalogue
 from streaming import SEP
 from twisted.internet import reactor
