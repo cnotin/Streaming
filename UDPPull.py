@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import glob
-import re
+import os
 from streaming import PRON
 from streaming import SEP
-from twisted.internet.protocol import DatagramProtocol
-from twisted.internet.protocol import Factory
-from twisted.internet.protocol import Protocol
-from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor
+from twisted.internet.protocol import DatagramProtocol
 
 
 
@@ -19,14 +16,14 @@ class UDPPullControl(DatagramProtocol):
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 		self.clients = {}
-		imagesPath = PRON + movie + "\\"
+		imagesPath = os.path.join(PRON, movie)
 		if movie == "tophat":
 			countImages = 99
 		else:
 			countImages = len(glob.glob1(imagesPath,"*.jpg"))
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
-			f = open(imagesPath + str(i) + ".jpg", "rb")
+			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
 			self.images.append(f.read())
 			f.close()
 		print "a chargé %d images pour %s" % (countImages, movie)

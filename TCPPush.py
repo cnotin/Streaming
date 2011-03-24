@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import glob
+import os
 from streaming import PRON
 from streaming import SEP
 from twisted.internet import reactor
@@ -88,14 +89,14 @@ class TCPPushControlFactory(Factory):
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 
-		imagesPath = PRON + movie + "\\"
+		imagesPath = os.path.join(PRON, movie)
 		if movie == "tophat":
 			countImages = 99
 		else:
 			countImages = len(glob.glob1(imagesPath,"*.jpg"))
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
-			f = open(imagesPath + str(i) + ".jpg", "rb")
+			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
 			imageData = f.read()
 			self.images.append("%s%s%s%s%s" % (i, SEP, len(imageData), SEP,  imageData))
 			f.close()
