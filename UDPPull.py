@@ -6,10 +6,7 @@ from streaming import PRON
 from streaming import SEP
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
-
-
-
-
+import socket
 
 class UDPPullControl(DatagramProtocol):
 	def __init__(self, movie):
@@ -47,37 +44,43 @@ class UDPPullControl(DatagramProtocol):
 		fragmentImage = "%s%s%s%s%s%s%s%s" % (client["imagecourante"],SEP,\
 										str(len(self.images[client["imagecourante"]])),\
 										 SEP,str(i*client["fragmentSize"]), SEP, str(len(messageImage)),SEP)
-		print i
+		#print i
 		fragmentImage += "%s" % messageImage
-		self.transport.write(fragmentImage, (host, client["port"]))
-		client["packagecourant"] +=1
 		
-		if(i==nbfragments+reste):		
-			client["imagecourante"] += 1
-			client["packagecourant"]= 0
-		else:
+		try:
+			self.transport.write(fragmentImage, (host, client["port"]))
+			
+		except socket.error:
 			reactor.callLater(0, self.sendCurrentImage, host, port)
-		
+			
+		else:	
+			client["packagecourant"] +=1
+			
+			if(i==nbfragments+reste):		
+				client["imagecourante"] += 1
+				client["packagecourant"]= 0
+			else:
+				reactor.callLater(0, self.sendCurrentImage, host, port)
 	
 
 	def datagramReceived(self, data, (host, port)):
 		if not host+":%s" % port in self.clients:
 			self.clients[host+":%s" % port]= {}
-		print data
+		#print data
 		listedonnes = data.split(SEP)
 		for line in listedonnes:		
 			if (line.find("GET -1") == 0):
-				print "send"
+				#print "send"
 				self.sendCurrentImage(host,port)
 				
 			elif (line.find("LISTEN_PORT") == 0):
 				self.clients[host+":%s" % port]["port"] = int(line.split(" ")[1])
-				print "port"
+				#print "port"
 			elif (line.find("FRAGMENT_SIZE") == 0):
 				self.clients[host+":%s" % port]["fragmentSize"]= int(line.split(" ")[1])
 				self.clients[host+":%s" % port]["imagecourante"]= 1
 				self.clients[host+":%s" % port]["packagecourant"]=0
-				print "image"
+				#print "image"
 			elif (line.find("END") == 0):
 				del self.clients[host+":%s" % port]
 				#self.transport.connect(host,int(line.split(" ")[1])
