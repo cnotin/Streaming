@@ -28,61 +28,66 @@ class UDPPullControl(DatagramProtocol):
 	def __del__(self):
 		print "Fermeture connexion contrôle"
 		
-	def sendCurrentImage(self, host, port):
-		client=self.clients[host+":%s" % port]
-		i=client["packagecourant"]
-		if client["imagecourante"] == len(self.images):
-			client["imagecourante"] = 1
-		nbfragments=len(self.images[client["imagecourante"]])/client["fragmentSize"]
-		reste=len(self.images[client["imagecourante"]]) % client["fragmentSize"]
-		if reste == 0:
-			reste=-1
+	def sendCurrentImage(self, host, port, image, fragmentNum = 0, a = 0):
+		#print "envoi image %s %s" % (image, fragmentNum)
+		client = self.clients[host+":%s" % port]
+
+		tailleImage = len(self.images[image])
+		fragmentPos = fragmentNum * client["fragmentSize"]
+		
+		if fragmentPos + client["fragmentSize"] > tailleImage:
+			finImage = True
+			tailleFragment = tailleImage - fragmentPos
 		else:
-			reste=0
-		
-		messageImage = self.images[client["imagecourante"]][i*client["fragmentSize"]:(1+i)*client["fragmentSize"]]
-		fragmentImage = "%s%s%s%s%s%s%s%s" % (client["imagecourante"],SEP,\
-										str(len(self.images[client["imagecourante"]])),\
-										 SEP,str(i*client["fragmentSize"]), SEP, str(len(messageImage)),SEP)
-		#print i
-		fragmentImage += "%s" % messageImage
-		
+			finImage = False
+			tailleFragment = client["fragmentSize"]
+
+
+		message = "%s%s%s%s%s%s%s%s%s" % (image, SEP, tailleImage,\
+		SEP, fragmentPos, SEP, tailleFragment, SEP, self.images[image][fragmentPos:fragmentPos + tailleFragment])
+
 		try:
-			self.transport.write(fragmentImage, (host, client["port"]))
-			
-		except socket.error:
-			reactor.callLater(0, self.sendCurrentImage, host, port)
-			
-		else:	
-			client["packagecourant"] +=1
-			
-			if(i==nbfragments+reste):		
-				client["imagecourante"] += 1
-				client["packagecourant"]= 0
-			else:
-				reactor.callLater(0, self.sendCurrentImage, host, port)
+			self.transport.write(message, (host, client["port"]))
+		except:
+			print "Buffer d'envoi UDP rempli, baisser la qualité des images et/ou la fréquence"
+			a += 1
+		else:
+			fragmentNum += 1
+
+		if not finImage and a < 1:
+			reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, a)
 	
 
 	def datagramReceived(self, data, (host, port)):
 		if not host+":%s" % port in self.clients:
 			self.clients[host+":%s" % port]= {}
-		#print data
+			client = self.clients[host+":%s" % port]
+			client["imagecourante"] = 1
+			client["packagecourant"] = 0
+		else:
+			client = self.clients[host+":%s" % port]		
 		listedonnes = data.split(SEP)
+			
 		for line in listedonnes:		
 			if (line.find("GET -1") == 0):
 				#print "send"
-				self.sendCurrentImage(host,port)
+
+				self.sendCurrentImage(host, port, client["imagecourante"])
+
+				if client["imagecourante"] == len(self.images) - 1:
+					client["imagecourante"] = 1
+				else:
+					client["imagecourante"] += 1
 				
 			elif (line.find("LISTEN_PORT") == 0):
-				self.clients[host+":%s" % port]["port"] = int(line.split(" ")[1])
+				client["port"] = int(line.split(" ")[1])
 				#print "port"
 			elif (line.find("FRAGMENT_SIZE") == 0):
-				self.clients[host+":%s" % port]["fragmentSize"]= int(line.split(" ")[1])
-				self.clients[host+":%s" % port]["imagecourante"]= 1
-				self.clients[host+":%s" % port]["packagecourant"]=0
+				client["fragmentSize"]= int(line.split(" ")[1])
+				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 20000000)
 				#print "image"
 			elif (line.find("END") == 0):
-				del self.clients[host+":%s" % port]
+				del client
 				#self.transport.connect(host,int(line.split(" ")[1])
 				#point = UDP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
 				#d = point.connect(self.factory.UDPPullDataFactory)
