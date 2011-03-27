@@ -63,12 +63,11 @@ class UDPPullControl(DatagramProtocol):
 			self.clients[host+":%s" % port]= {}
 			client = self.clients[host+":%s" % port]
 			client["imagecourante"] = 1
-			client["packagecourant"] = 0
 		else:
 			client = self.clients[host+":%s" % port]		
 		listedonnes = data.split(SEP)
 			
-		for line in listedonnes:		
+		for line in listedonnes:
 			if (line.find("GET -1") == 0):
 				#print "send"
 
