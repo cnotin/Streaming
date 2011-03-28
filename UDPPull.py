@@ -14,10 +14,8 @@ class UDPPullControl(DatagramProtocol):
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 		self.clients = {}
 		imagesPath = os.path.join(PRON, movie)
-		if movie == "tophat":
-			countImages = 99
-		else:
-			countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
@@ -28,7 +26,7 @@ class UDPPullControl(DatagramProtocol):
 	def __del__(self):
 		print "Fermeture connexion contrôle"
 		
-	def sendCurrentImage(self, host, port, image, fragmentNum = 0, a = 0):
+	def sendCurrentImage(self, host, port, image, fragmentNum = 0, tryNum = 0):
 		#print "envoi image %s %s" % (image, fragmentNum)
 		client = self.clients[host+":%s" % port]
 
@@ -50,12 +48,12 @@ class UDPPullControl(DatagramProtocol):
 			self.transport.write(message, (host, client["port"]))
 		except:
 			print "Buffer d'envoi UDP rempli, baisser la qualité des images et/ou la fréquence"
-			a += 1
+			tryNum += 1
 		else:
 			fragmentNum += 1
 
-		if not finImage and a < 1:
-			reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, a)
+		if not finImage and tryNum < 5:
+			reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, tryNum)
 	
 
 	def datagramReceived(self, data, (host, port)):
@@ -83,14 +81,10 @@ class UDPPullControl(DatagramProtocol):
 				#print "port"
 			elif (line.find("FRAGMENT_SIZE") == 0):
 				client["fragmentSize"]= int(line.split(" ")[1])
-				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 20000000)
+				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 20000)
 				#print "image"
 			elif (line.find("END") == 0):
 				del self.clients[host+":%s" % port]
-				#self.transport.connect(host,int(line.split(" ")[1])
-				#point = UDP4ClientEndpoint(reactor, self.transport.getPeer().host, int(line.split(" ")[1]))
-				#d = point.connect(self.factory.UDPPullDataFactory)
-				#d.addCallback(gotProtocol, self)
 
 
 	def connectionMade(self):

@@ -32,7 +32,7 @@ class UDPPushControl(DatagramProtocol):
 	def __del__(self):
 		print "Fermeture connexion contrôle"
 
-	def sendCurrentImage(self, host, port, image, fragmentNum = 0, a = 0):
+	def sendCurrentImage(self, host, port, image, fragmentNum = 0):
 		#print "envoi image %s %s" % (image, fragmentNum)
 		try:
 			client = self.clients[host+":%s" % port]
@@ -53,19 +53,13 @@ class UDPPushControl(DatagramProtocol):
 			message = "%s%s%s%s%s%s%s%s%s" % (image, SEP, tailleImage,\
 			SEP, fragmentPos, SEP, tailleFragment, SEP, self.images[image][fragmentPos:fragmentPos + tailleFragment])
 
-			try:
-				self.transport.write(message, (host, client["port"]))
-			except:
-				print "Buffer d'envoi UDP rempli, baisser la qualité des images et/ou la fréquence"
-				a += 1
-			else:
-				fragmentNum += 1
+			self.transport.write(message, (host, client["port"]))
 
-			if not finImage and a < 1:
-				reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, a)
+			if not finImage:
+				reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum)
 
 	def sendImages(self, host, port, client):
-		print "envoi images %d " % client["imagecourante"]
+		#print "envoi images %d " % client["imagecourante"]
 		if client["imagecourante"] == len(self.images) - 1:
 			client["imagecourante"] = 1
 		else:
