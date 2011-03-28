@@ -4,6 +4,7 @@
 from TCPPull import TCPPullControlFactory
 from TCPPush import TCPPushControlFactory
 from UDPPull import UDPPullControl
+from UDPPush import UDPPushControl
 from catalogue import Catalogue
 from streaming import SEP
 from twisted.internet import reactor
@@ -41,8 +42,11 @@ class ServeurHTTPFactory(Factory):
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
-			if objet[5] == "TCP_PUSH":
+			elif objet[5] == "TCP_PUSH":
+				#objet[6] = ips
 				reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
 			elif objet[5] == "UDP_PULL":
 				reactor.listenUDP(objet[4], UDPPullControl(objet[1]))
+			elif objet[5] == "UDP_PUSH":
+				reactor.listenUDP(objet[4], UDPPushControl(objet[1], objet[6]))
 			
