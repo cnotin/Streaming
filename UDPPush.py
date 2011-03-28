@@ -84,7 +84,6 @@ class UDPPushControl(DatagramProtocol):
 			self.clients[host+":%s" % port]= {}
 			client = self.clients[host+":%s" % port]
 			client["imagecourante"] = 1
-			#client["receiveBuffer"] = []
 			client["fragmentSize"] = 0
 			client["port"] = 0
 			client["aliveDeferred"] = None
@@ -93,12 +92,10 @@ class UDPPushControl(DatagramProtocol):
 		else:
 			client = self.clients[host+":%s" % port]
 
-		#client["receiveBuffer"] = data.split(SEP)
 
 		for line in data.split(SEP):
 			if (line.find("START") == 0):
 
-				#if client["fragmentSize"] != 0 and client["port"] != 0:
 				if not client["sendingDeferred"]:
 					client["sendingDeferred"] = LoopingCall(self.sendImages, host, port, client)
 				client["sendingDeferred"].start(1./self.fps, now=True)
@@ -115,15 +112,15 @@ class UDPPushControl(DatagramProtocol):
 
 			elif (line.find("FRAGMENT_SIZE") == 0):
 				client["fragmentSize"] = int(line.split(" ")[1])
-				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 80000)
+				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 20000)
 
 			elif (line.find("END") == 0):
 				client["sendingDeferred"].stop()
+				client["aliveDeferred"].cancel()
 				del self.clients[host+":%s" % port]
 
 			elif (line.find("ALIVE") == 0):
 				client["aliveDeferred"].reset(60)
-				print "alive"
 
 
 	def connectionMade(self):
