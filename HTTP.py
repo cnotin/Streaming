@@ -25,28 +25,29 @@ class ServeurHttp(LineReceiver):
 		return msg
 
 	def lineReceived(self, line):
-		print "HTTP = " + line
+		print "[HTTP] reçu = " + line
 		if (line.find("GET") != -1):
 			self.transport.write(self.addHeader(self.factory.cat.getCatalogue()))
 
 	def connectionMade(self):
-		print "client connecté"
-
+		print "[HTTP] client connecté"
 
 
 class ServeurHTTPFactory(Factory):
 	protocol = ServeurHttp
 
 	def __init__(self, ip):
+		print "Chargement du catalogue et des images en mémoire...\n"
 		self.cat = Catalogue("catalogue.txt", ip)
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
 			elif objet[5] == "TCP_PUSH":
-				#objet[6] = ips
+				#memo -> objet[6] : ips
 				reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
 			elif objet[5] == "UDP_PULL":
 				reactor.listenUDP(objet[4], UDPPullControl(objet[1]))
 			elif objet[5] == "UDP_PUSH":
+				#memo -> objet[6] : ips
 				reactor.listenUDP(objet[4], UDPPushControl(objet[1], objet[6]))
-			
+		print "Catalogue chargé, le serveur est prêt :)\n"

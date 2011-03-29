@@ -17,22 +17,17 @@ def gotProtocol(p, tcpPushControl):
 
 class TCPPushData(Protocol):
 	def __init__(self):
-		print "constructeur TCPPushDataProtocol"
+		print "[TCP Push] Construction du canal de données"
 		self.image_id = 1
 
 	def __del__(self):
 		self.transport.loseConnection()
-		print "Fermeture connexion données"
+		print "[TCP Push] Fermeture du canal de données"
 
 
 	def sendCurrentImage(self, images):
 		if self.image_id == len(images):
 			self.image_id = 1
-		#print "j'envoie l'image %s" % self.image_id
-		# Tenative d'optimisation :
-		#sender = FileSender()
-		#output = StringIO.StringIO("%s%s%s%s%s" % (self.image_id, SEP, len(images[self.image_id]), SEP,  images[self.image_id]))
-		#sender.beginFileTransfer(output, self.transport, None)
 
 		self.transport.write(images[self.image_id])
 		self.image_id += 1
@@ -40,14 +35,15 @@ class TCPPushData(Protocol):
 
 class TCPPushControl(LineReceiver):
 	def __init__(self):
+		print "[TCP Push] Création du canal de contrôle"
 		self.clientProtocol = None
 		self.lc = None
 
 	def __del__(self):
-		print "Fermeture connexion contrôle"
+		print "[TCP Push] Fermeture du canal de contrôle"
 
 	def lineReceived(self, line):
-		print "TCP PUSH = " + line
+		print "[TCP Push] reçu = " + line
 		if (line.find("START") == 0):
 			if self.clientProtocol:
 				self.isSending = True
@@ -55,7 +51,6 @@ class TCPPushControl(LineReceiver):
 					self.lc = LoopingCall(self.clientProtocol.sendCurrentImage, self.factory.images)
 				self.lc.start(1./self.factory.fps)
 			else:
-				#print "tcp push appel moi plus tard"
 				reactor.callLater(0, self.lineReceived, line)
 
 		elif (line.find("PAUSE") == 0):
@@ -74,7 +69,7 @@ class TCPPushControl(LineReceiver):
 			del self.clientProtocol
 
 	def connectionMade(self):
-		print "TCP PUSH contrôle connecté !"
+		print "[TCP Push] Canal de contrôle connecté !"
 
 
 class TCPPushControlFactory(Factory):
@@ -90,19 +85,11 @@ class TCPPushControlFactory(Factory):
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 
 		imagesPath = os.path.join(PRON, movie)
-		if movie == "tophat":
-			countImages = 99
-		else:
-			countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		countImages = len(glob.glob1(imagesPath,"*.jpg"))
+
 		for i in range(1, countImages + 1):
-			#print "image %s" % i
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
 			imageData = f.read()
 			self.images.append("%s%s%s%s%s" % (i, SEP, len(imageData), SEP,  imageData))
 			f.close()
 		print "a chargé %d images pour %s" % (countImages, movie)
-
-
-
-if __name__ == "__main__":
-    print "Hello World"

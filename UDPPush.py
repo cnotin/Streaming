@@ -12,16 +12,15 @@ from twisted.internet.task import LoopingCall
 
 class UDPPushControl(DatagramProtocol):
 	def __init__(self, movie, fps):
+		print "[UDP Push] Construction du canal de contrôle"
 		self.fps = fps
 		
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 		self.clients = {}
 		imagesPath = os.path.join(PRON, movie)
-		if movie == "tophat":
-			countImages = len(glob.glob1(imagesPath,"*.jpg"))#99
-		else:
-			countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		countImages = len(glob.glob1(imagesPath,"*.jpg"))
+		
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
@@ -30,15 +29,15 @@ class UDPPushControl(DatagramProtocol):
 		print "a chargé %d images pour %s" % (countImages, movie)
 
 	def __del__(self):
-		print "Fermeture connexion contrôle"
+		print "[UDP Push] Fermeture du canal contrôle"
 
-	def sendCurrentImage(self, host, port, image, fragmentNum = 0):
-		#print "envoi image %s %s" % (image, fragmentNum)
+	def sendCurrentImage(self, host, port, image, fragmentNum = 0, tryNum = 0):
 		try:
 			client = self.clients[host+":%s" % port]
 		except exceptions.KeyError:
 			pass
 		else:
+			#print "try %d" % tryNum
 			tailleImage = len(self.images[image])
 			fragmentPos = fragmentNum * client["fragmentSize"]
 
@@ -53,13 +52,18 @@ class UDPPushControl(DatagramProtocol):
 			message = "%s%s%s%s%s%s%s%s%s" % (image, SEP, tailleImage,\
 			SEP, fragmentPos, SEP, tailleFragment, SEP, self.images[image][fragmentPos:fragmentPos + tailleFragment])
 
-			self.transport.write(message, (host, client["port"]))
+			try:
+				self.transport.write(message, (host, client["port"]))
+			except socket.error:
+				print "Buffer d'envoi UDP rempli, baisser la qualité des images et/ou la fréquence"
+				tryNum += 1
+			else:
+				fragmentNum += 1
 
-			if not finImage:
-				reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum)
+			if not finImage and tryNum < 2:
+				reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, tryNum)
 
 	def sendImages(self, host, port, client):
-		#print "envoi images %d " % client["imagecourante"]
 		if client["imagecourante"] == len(self.images) - 1:
 			client["imagecourante"] = 1
 		else:
@@ -73,7 +77,7 @@ class UDPPushControl(DatagramProtocol):
 		del self.clients[host+":%s" % port]
 
 	def datagramReceived(self, data, (host, port)):
-		#print "data = %s" % data
+		print "[UDP Push] reçu = " + str(data)
 		if not host+":%s" % port in self.clients:
 			self.clients[host+":%s" % port]= {}
 			client = self.clients[host+":%s" % port]
@@ -89,7 +93,6 @@ class UDPPushControl(DatagramProtocol):
 
 		for line in data.split(SEP):
 			if (line.find("START") == 0):
-
 				if not client["sendingDeferred"]:
 					client["sendingDeferred"] = LoopingCall(self.sendImages, host, port, client)
 				client["sendingDeferred"].start(1./self.fps, now=True)
@@ -106,7 +109,7 @@ class UDPPushControl(DatagramProtocol):
 
 			elif (line.find("FRAGMENT_SIZE") == 0):
 				client["fragmentSize"] = int(line.split(" ")[1])
-				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 20000)
+				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 200)
 
 			elif (line.find("END") == 0):
 				client["sendingDeferred"].stop()
@@ -118,8 +121,4 @@ class UDPPushControl(DatagramProtocol):
 
 
 	def connectionMade(self):
-		print "UDP PUSH contrôle connecté !"
-
-
-if __name__ == "__main__":
-    print "Hello World"
+		print "[UDP Push] Canal de contrôle connecté !"
