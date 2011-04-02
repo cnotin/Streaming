@@ -55,9 +55,7 @@ class UDPPullControl(DatagramProtocol):
 			reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, tryNum)
 	
 
-	def datagramReceived(self, data, (host, port)):
-		print "[UDP Pull] reçu = " + str(data)
-		
+	def datagramReceived(self, data, (host, port)):		
 		if not host+":%s" % port in self.clients:
 			self.clients[host+":%s" % port]= {}
 			client = self.clients[host+":%s" % port]
@@ -76,13 +74,16 @@ class UDPPullControl(DatagramProtocol):
 					client["imagecourante"] += 1
 				
 			elif (line.find("LISTEN_PORT") == 0):
+				print "[UDP Pull] reçu = " + str(data)
 				client["port"] = int(line.split(" ")[1])
 
 			elif (line.find("FRAGMENT_SIZE") == 0):
-				client["fragmentSize"]= int(line.split(" ")[1])
+				print "[UDP Pull] reçu = " + str(data)
+				client["fragmentSize"]= int(0.8*int(line.split(" ")[1]))
 				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 200)
 
 			elif (line.find("END") == 0):
+				print "[UDP Pull] reçu = " + str(data)
 				del self.clients[host+":%s" % port]
 
 

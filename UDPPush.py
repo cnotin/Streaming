@@ -108,7 +108,7 @@ class UDPPushControl(DatagramProtocol):
 					client["port"] = int(line.split(" ")[1])
 
 			elif (line.find("FRAGMENT_SIZE") == 0):
-				client["fragmentSize"] = int(line.split(" ")[1])
+				client["fragmentSize"] = int(0.8*int(line.split(" ")[1]))
 				self.transport.getHandle().setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, client["fragmentSize"] * 200)
 
 			elif (line.find("END") == 0):
