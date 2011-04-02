@@ -10,9 +10,9 @@ from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet.task import LoopingCall
 
-class UDPPushControl(DatagramProtocol):
+class UDPPush(DatagramProtocol):
 	def __init__(self, movie, fps):
-		print "[UDP Push] Construction du canal de contrôle"
+		print "[UDP Push] Construction du canal"
 		self.fps = fps
 		
 		self.images = []
@@ -29,7 +29,7 @@ class UDPPushControl(DatagramProtocol):
 		print "a chargé %d images pour %s" % (countImages, movie)
 
 	def __del__(self):
-		print "[UDP Push] Fermeture du canal contrôle"
+		print "[UDP Push] Fermeture du canal"
 
 	def sendCurrentImage(self, host, port, image, fragmentNum = 0, tryNum = 0):
 		try:
@@ -121,4 +121,4 @@ class UDPPushControl(DatagramProtocol):
 
 
 	def connectionMade(self):
-		print "[UDP Push] Canal de contrôle connecté !"
+		print "[UDP Push] Canal connecté !"

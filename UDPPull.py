@@ -8,9 +8,9 @@ from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
 import socket
 
-class UDPPullControl(DatagramProtocol):
+class UDPPull(DatagramProtocol):
 	def __init__(self, movie):
-		print "[UDP Pull] Création du canal de contrôle"
+		print "[UDP Pull] Création du canal"
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 		self.clients = {}
@@ -24,7 +24,7 @@ class UDPPullControl(DatagramProtocol):
 		print "a chargé %d images pour %s" % (countImages, movie)
 
 	def __del__(self):
-		print "[UDP Pull] Fermeture du canal contrôle"
+		print "[UDP Pull] Fermeture du canal"
 		
 	def sendCurrentImage(self, host, port, image, fragmentNum = 0, tryNum = 0):
 		client = self.clients[host+":%s" % port]
@@ -88,4 +88,4 @@ class UDPPullControl(DatagramProtocol):
 
 
 	def connectionMade(self):
-		print "[UDP Pull] Canal de contrôle connecté !"
+		print "[UDP Pull] Canal connecté !"

@@ -3,8 +3,8 @@
 
 from TCPPull import TCPPullControlFactory
 from TCPPush import TCPPushControlFactory
-from UDPPull import UDPPullControl
-from UDPPush import UDPPushControl
+from UDPPull import UDPPull
+from UDPPush import UDPPush
 from catalogue import Catalogue
 from streaming import SEP
 from twisted.internet import reactor
@@ -68,10 +68,10 @@ class ServeurHTTPFactory(Factory):
 				# le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
 				reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
 			elif objet[5] == "UDP_PULL":
-				reactor.listenUDP(objet[4], UDPPullControl(objet[1]))
+				reactor.listenUDP(objet[4], UDPPull(objet[1]))
 			elif objet[5] == "UDP_PUSH":
 				#pour mémoire : objet[6] = ips de la vidéo
 				# le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
-				reactor.listenUDP(objet[4], UDPPushControl(objet[1], objet[6]))
+				reactor.listenUDP(objet[4], UDPPush(objet[1], objet[6]))
 
 		print "Catalogue chargé, le serveur est prêt :)\n"
