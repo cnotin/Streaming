@@ -107,8 +107,8 @@ class TCPPullControlFactory(Factory):
         countImages = len(glob.glob1(imagesPath, "*." + fileType.lower()))
 
         for i in range(1, countImages + 1):
-            # charger 1.jpg, 2.jpg, 3.jpg etc... (ou 1.bmp, 2.bmp ...)
-            f = open(os.path.join(imagesPath, str(i) + "." + fileType.lower()), "rb")
+            # charger img1.jpeg, img2.jpeg, img3.jpeg etc... (ou img1.bmp, img2.bmp ...)
+            f = open(os.path.join(imagesPath, "img" + str(i) + "." + fileType.lower()), "rb")
             imageData = f.read()
             # les headers de chaque paquet, image par image, sont précalculés car ils ne changent pas à l'exécution
             self.images.append("%s%s%s%s%s" % (i, SEP, len(imageData), SEP,  imageData))
