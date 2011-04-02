@@ -4,7 +4,7 @@ from HTTP import *
 from twisted.internet import reactor
 
 
-PRON = "pr0n"
+VIDEOTHEQUE = "videotheque"
 SEP = "\r\n"
 
 

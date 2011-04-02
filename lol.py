@@ -1,10 +1,10 @@
-PRON = "pr0n\\"
+VIDEOTHEQUE = "videotheque\\"
 images = []
 images.append("")
 
 for i in range(1,81):
 	print "image %s" % i
-	f = open(PRON + "mavideo\\" + str(i) + ".jpg", "rb")
+	f = open(VIDEOTHEQUE + "mavideo\\" + str(i) + ".jpg", "rb")
 	images.append(f.read())
 	f.close()
 

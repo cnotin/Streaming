@@ -4,7 +4,7 @@ import exceptions
 import glob
 import os
 import socket
-from streaming import PRON
+from streaming import VIDEOTHEQUE
 from streaming import SEP
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
@@ -18,7 +18,7 @@ class UDPPushControl(DatagramProtocol):
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image a l'index 1
 		self.clients = {}
-		imagesPath = os.path.join(PRON, movie)
+		imagesPath = os.path.join(VIDEOTHEQUE, movie)
 		countImages = len(glob.glob1(imagesPath,"*.jpg"))
 		
 		for i in range(1, countImages + 1):
