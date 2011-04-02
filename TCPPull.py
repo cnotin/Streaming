@@ -11,10 +11,6 @@ from twisted.internet.protocol import Protocol
 from twisted.protocols.basic import LineReceiver
 
 
-def gotProtocol(p, tcpPullControl):
-	tcpPullControl.clientProtocol = p
-	
-
 class TCPPullData(Protocol):
 	def __init__(self):
 		print "[TCP Pull] construction du canal de données"
@@ -22,7 +18,6 @@ class TCPPullData(Protocol):
 
 	def __del__(self):
 		print "[TCP Pull] Fermeture canal de données"
-
 
 	def sendCurrentImage(self, images):
 		if self.image_id == len(images):
@@ -32,6 +27,9 @@ class TCPPullData(Protocol):
 		self.image_id += 1
 
 
+def gotProtocol(p, tcpPullControl):
+	tcpPullControl.clientProtocol = p
+	
 class TCPPullControl(LineReceiver):
 	def __init__(self):
 		print "[TCP Pull] Création du canal de contrôle"

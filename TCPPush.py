@@ -12,9 +12,6 @@ from twisted.internet.task import LoopingCall
 from twisted.protocols.basic import LineReceiver
 
 
-def gotProtocol(p, tcpPushControl):
-	tcpPushControl.clientProtocol = p
-
 class TCPPushData(Protocol):
 	def __init__(self):
 		print "[TCP Push] Construction du canal de données"
@@ -24,7 +21,6 @@ class TCPPushData(Protocol):
 		self.transport.loseConnection()
 		print "[TCP Push] Fermeture du canal de données"
 
-
 	def sendCurrentImage(self, images):
 		if self.image_id == len(images):
 			self.image_id = 1
@@ -32,7 +28,10 @@ class TCPPushData(Protocol):
 		self.transport.write(images[self.image_id])
 		self.image_id += 1
 
-
+		
+def gotProtocol(p, tcpPushControl):
+	tcpPushControl.clientProtocol = p
+		
 class TCPPushControl(LineReceiver):
 	def __init__(self):
 		print "[TCP Push] Création du canal de contrôle"
