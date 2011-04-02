@@ -1,19 +1,32 @@
+# -*- coding: utf-8 -*-
+
 class Catalogue():
-	def __init__(self, fichier, ip):
-		self.fichier = fichier
+	"""
+	Recense la logique inhérente à la gestion du Catalogue : lecture à partir
+	d'un fichier dans un dictionnaire, puis re-conversion de ce qui a été lu vers
+	le format texte (pour envoyer au client).
+	"""
+
+	def __init__(self, fichier):
+		"""
+		On prend le path du fichier catalogue.txt que l'on va lire (attention au format).
+		"""
 		self.objects = []
 
-		f = open(self.fichier, "r")
+		f = open(fichier, "r")
 		temp = f.readlines()
 		self.servAddr = temp[0].split(": ")[1].strip()
 		self.servPort = int(temp[1].split(": ")[1])
+		print "J'écoute sur l'adresse IP %s et le port %d" % (self.servAddr, self.servPort)
+		
+		print "Chargement du catalogue et des images en mémoire...\n"
 		for line in temp[2:]:
 			splittedLine = line.split("=")
 			id = int(splittedLine[1].split(" ")[0])
 			name = splittedLine[2].split(" ")[0]
 			type = splittedLine[3].split(" ")[0]
 			addr = splittedLine[4].split(" ")[0]
-			addr = addr.replace("MYIP", ip)
+			addr = addr.replace("MYIP", self.servAddr)
 			port = int(splittedLine[5].split(" ")[0])
 			protocole = splittedLine[6].split(" ")[0]
 			ips = float(splittedLine[7].split(" ")[0])

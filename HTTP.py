@@ -36,9 +36,8 @@ class ServeurHttp(LineReceiver):
 class ServeurHTTPFactory(Factory):
 	protocol = ServeurHttp
 
-	def __init__(self, ip):
-		print "Chargement du catalogue et des images en mémoire...\n"
-		self.cat = Catalogue("catalogue.txt", ip)
+	def __init__(self, catalogue):
+		self.cat = catalogue
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
