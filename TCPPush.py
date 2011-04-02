@@ -65,8 +65,8 @@ class TCPPushControl(LineReceiver):
 				if not self.lc: # si le LoopingCall n'existe pas encore (premier START de l'échange)
 					# on le crée
 					self.lc = LoopingCall(self.clientProtocol.sendCurrentImage, self.factory.images)
-				# et on le lance avec la bonne fréquence
-				self.lc.start(1./self.factory.fps)
+				# et on le lance avec la bonne fréquence, en commençant tout de suite (now=True) : n'attend pas le premier appel
+				self.lc.start(1./self.factory.fps, now=True)
 			else: # la connexion vers le client n'a pas encore été établie, on enregistre ce "START" et on le redéclenche
 			# jusqu'à ce que la connexion ait bien été établie (comme ça on ne perd pas le message)
 				reactor.callLater(0, self.lineReceived, line)
