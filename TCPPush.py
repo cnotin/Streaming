@@ -53,6 +53,8 @@ class TCPPushControl(LineReceiver):
 
         # self.lc est l'objet de type LoopingCall, qui sera utilisé pour créer un évènement répétitif qui délenchera l'envoi des images
         self.lc = None
+        # on mémorise l'état de la vidéo, par défaut on commence vidéo à l'arrêt (on n'envoie rien)
+        self.isSending = False
 
     def __del__(self):
         print "[TCP Push] Fermeture du canal de contrôle"
@@ -61,12 +63,13 @@ class TCPPushControl(LineReceiver):
         print "[TCP Push] reçu = " + line
         if (line.find("START") == 0):
             if self.clientProtocol: # nous nous sommes connectés avec succès au client
-                self.isSending = True # on mémorise que la vidéo est en état de lecture, utilisé au moment du END
-                if not self.lc: # si le LoopingCall n'existe pas encore (premier START de l'échange)
-                    # on le crée
-                    self.lc = LoopingCall(self.clientProtocol.sendCurrentImage, self.factory.images)
-                # et on le lance avec la bonne fréquence, en commençant tout de suite (now=True) : n'attend pas le premier appel
-                self.lc.start(1./self.factory.fps, now=True)
+                if not self.isSending:
+                    self.isSending = True # on mémorise que la vidéo est en état de lecture, utilisé au moment du END
+                    if not self.lc: # si le LoopingCall n'existe pas encore (premier START de l'échange)
+                        # on le crée
+                        self.lc = LoopingCall(self.clientProtocol.sendCurrentImage, self.factory.images)
+                    # et on le lance avec la bonne fréquence, en commençant tout de suite (now=True) : n'attend pas le premier appel
+                    self.lc.start(1./self.factory.fps, now=True)
             else: # la connexion vers le client n'a pas encore été établie, on enregistre ce "START" et on le redéclenche
             # jusqu'à ce que la connexion ait bien été établie (comme ça on ne perd pas le message)
                 reactor.callLater(0, self.lineReceived, line)
