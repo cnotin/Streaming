@@ -19,7 +19,7 @@ class Catalogue():
 		#port local du serveur, attention : doit être libre car ce n'est pas vérifié !
 		self.servPort = int(temp[1].split(": ")[1])
 		print "J'écoute sur l'adresse IP %s et le port %d" % (self.servAddr, self.servPort)
-		
+
 		print "Chargement du catalogue et des images en mémoire...\n"
 		# pour chaque ligne du catalogue (exceptée les 2 premières qui ont déjà été lues pour
 		# l'IP et le port

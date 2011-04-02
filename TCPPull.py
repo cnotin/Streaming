@@ -39,11 +39,11 @@ def gotProtocol(p, tcpPullControl):
 	déclencher des méthodes de l'objet du canal de données.
 	"""
 	tcpPullControl.clientProtocol = p # p : TCPPullData, protocol du canal de données
-	
+
 class TCPPullControl(LineReceiver):
 	"""
 	Protocole créé à chaque instance de canal de contrôle.
-	
+
 	Quand on reçoit LISTEN_PORT, on va lancer la connexion vers le client. Cela peut être long et comme nous
 	sommes dans un paradigme de programmation évènementielle c'est intolérable donc on dit au réacteur de se
 	connecter et il nous rappellera quand cela sera fait. C'est pour cela que nous avons self.clientProtocol
@@ -63,7 +63,7 @@ class TCPPullControl(LineReceiver):
 			else: # la connexion vers le client n'a pas encore été établie, on enregistre ce "GET -1" et on le redéclenche
 			# jusqu'à ce que la connexion ait bien été établie (comme ça on ne perd pas le message)
 				reactor.callLater(0, self.lineReceived, line)
-				
+
 		elif (line.find("LISTEN_PORT") == 0):
 			print "[TCP Pull] reçu = " + line
 
@@ -72,12 +72,12 @@ class TCPPullControl(LineReceiver):
 			d = point.connect(self.factory.tcpPullDataFactory) # Factory qui va créer un objet TCPPullData qui va gérer cette connexion
 			# Quand la connexion s'est bien déroulée, appeler ce callback
 			d.addCallback(gotProtocol, self)
-			
+
 		elif (line.find("END") == 0):
 			print "[TCP Pull] reçu = " + line
-			
+
 			self.transport.loseConnection()
-			del self.clientProtocol 
+			del self.clientProtocol
 
 
 	def connectionMade(self):
@@ -103,7 +103,7 @@ class TCPPullControlFactory(Factory):
 		# compte toutes les images (*.jpg) présentes dans le répertoire, attention si un fichier .jpg qui ne fait pas partie de la vidéo
 		# est présent il sera compté comme tel et posera problème
 		countImages = len(glob.glob1(imagesPath,"*.jpg"))
-		
+
 		for i in range(1, countImages + 1):
 			# charger 1.jpg, 2.jpg, 3.jpg etc...
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")

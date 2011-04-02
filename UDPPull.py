@@ -15,19 +15,19 @@ class UDPPull(DatagramProtocol):
 	"""
 	def __init__(self, movie):
 		print "[UDP Pull] Création du canal"
-		
+
 		# ce dictionnaire sert à mémoriser les informations de chaque client, contrairement à TCP où l'on utilise un mode connecté et donc un objet
 		# par client, ici il n'y a qu'un objet pour tous les clients et il doit donc jongler pour savoir si c'est un client qu'il a déjà vu ou pas
 		# les clés du dictionnaire sont au format texte "ip_client:port_source"
 		self.clients = {}
-		
+
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image à l'index 1
 		imagesPath = os.path.join(VIDEOTHEQUE, movie)
 		# compte toutes les images (*.jpg) présentes dans le répertoire, attention si un fichier .jpg qui ne fait pas partie de la vidéo
 		# est présent il sera compté comme tel et posera problème
 		countImages = len(glob.glob1(imagesPath,"*.jpg"))
-		
+
 		for i in range(1, countImages + 1):
 		# charger 1.jpg, 2.jpg, 3.jpg etc...
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
@@ -37,7 +37,7 @@ class UDPPull(DatagramProtocol):
 
 	def __del__(self):
 		print "[UDP Pull] Fermeture du canal"
-		
+
 	def sendCurrentImage(self, host, port, image, fragmentNum = 0, tryNum = 0):
 		"""
 		Envoyer l'image courante vers le client qui écoute sur l'ip <host> et qui a envoyé à partir du <port> source,
@@ -50,7 +50,7 @@ class UDPPull(DatagramProtocol):
 		tailleImage = len(self.images[image])
 		# si fragmentSize = 1024, le fragment 0 est à l'adresse @0, le fragment 1 à @1024, le 2 @2048...
 		fragmentPos = fragmentNum * client["fragmentSize"]
-		
+
 		if fragmentPos + client["fragmentSize"] > tailleImage:
 			# on envoie le dernier fragment de l'image et donc la taille du fragment est <= fragmentSize
 			finImage = True
@@ -76,7 +76,7 @@ class UDPPull(DatagramProtocol):
 			# on dit au réacteur de nous rappeler tout de suite (0 sec) pour qu'on envoie le fragment suivant, on lui rend la main
 			# pour qu'il puisse effectivement envoyer le message qu'on lui a donné avec self.transport.write(...) (sinon il ne peut pas le faire : prog évènementielle)
 			reactor.callLater(0, self.sendCurrentImage, host, port, image, fragmentNum, tryNum)
-	
+
 
 	def datagramReceived(self, data, (host, port)):
 		"""
@@ -91,7 +91,7 @@ class UDPPull(DatagramProtocol):
 		else:
 			# réponse : oui, on récupère un pointeur sur ce client
 			client = self.clients[host+":%s" % port]
-		
+
 		# découpe la trame en lignes
 		for line in data.split(SEP):
 			if (line.find("GET -1") == 0):
@@ -102,7 +102,7 @@ class UDPPull(DatagramProtocol):
 					client["imagecourante"] = 1
 				else:
 					client["imagecourante"] += 1
-				
+
 			elif (line.find("LISTEN_PORT") == 0):
 				print "[UDP Pull] reçu = " + str(data)
 				# on note le port auquel envoyer les messages pour ce client

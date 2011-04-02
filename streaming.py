@@ -12,10 +12,10 @@ SEP = "\r\n"
 
 def main():
 	print "Bonjour, bienvenue sur le serveur de streaming de Clément Notin et Thomas Piccolo (B3154)"
-	
+
 	# On charge le catalogue, et les images de toutes les vidéos _en mémoire_ !
 	cat = Catalogue("catalogue.txt")
-	
+
 	# Lancement du serveur HTTP
 	reactor.listenTCP(cat.servPort, ServeurHTTPFactory(cat))
 	reactor.run()

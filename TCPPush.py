@@ -29,7 +29,7 @@ class TCPPushData(Protocol):
 		self.transport.write(images[self.image_id])
 		self.image_id += 1
 
-		
+
 def gotProtocol(p, tcpPushControl):
 	"""
 	Callback appelé quand la connexion a été établie, on veut donner au tcpPushControl du canal de contrôle,
@@ -37,20 +37,20 @@ def gotProtocol(p, tcpPushControl):
 	déclencher des méthodes de l'objet du canal de données.
 	"""
 	tcpPushControl.clientProtocol = p # p : TCPPushData, protocol du canal de données
-		
+
 class TCPPushControl(LineReceiver):
 	"""
 	Protocole créé à chaque instance de canal de contrôle.
-	
+
 	Quand on reçoit LISTEN_PORT, on va lancer la connexion vers le client. Cela peut être long et comme nous
 	sommes dans un paradigme de programmation évènementielle c'est intolérable donc on dit au réacteur de se
 	connecter et il nous rappellera quand cela sera fait. C'est pour cela que nous avons self.clientProtocol
 	qui est initialisé à None puis renseigné une fois que le callback de connexion établie sera appelé.
-	"""	
+	"""
 	def __init__(self):
 		print "[TCP Push] Création du canal de contrôle"
 		self.clientProtocol = None
-		
+
 		# self.lc est l'objet de type LoopingCall, qui sera utilisé pour créer un évènement répétitif qui délenchera l'envoi des images
 		self.lc = None
 

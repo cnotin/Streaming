@@ -20,18 +20,18 @@ class UDPPush(DatagramProtocol):
 	"""
 	def __init__(self, movie, fps):
 		print "[UDP Push] Construction du canal"
-		
+
 		self.fps = fps
 		# ce dictionnaire sert à mémoriser les informations de chaque client, contrairement à TCP où l'on utilise un mode connecté et donc un objet
 		# par client, ici il n'y a qu'un objet pour tous les clients et il doit donc jongler pour savoir si c'est un client qu'il a déjà vu ou pas
 		# les clés du dictionnaire sont au format texte "ip_client:port_source"
 		self.clients = {}
-		
+
 		self.images = []
 		self.images.append("") #car ceci commence à 0 et la première image à l'index 1
 		imagesPath = os.path.join(VIDEOTHEQUE, movie)
 		countImages = len(glob.glob1(imagesPath,"*.jpg"))
-		
+
 		for i in range(1, countImages + 1):
 			#print "image %s" % i
 			f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
@@ -110,7 +110,7 @@ class UDPPush(DatagramProtocol):
 		A chaque trame UDP reçue on regarde quel est la commande.
 		"""
 		print "[UDP Push] reçu = " + str(data)
-		
+
 		# a-t-on déjà vu ce client ou pas ?
 		if not host+":%s" % port in self.clients:
 			# réponse : non, on le crée !
@@ -132,7 +132,7 @@ class UDPPush(DatagramProtocol):
 				#d'implémenter les commandes START/PAUSE
 				if not client["sendingDeferred"]:
 					client["sendingDeferred"] = LoopingCall(self.sendImages, host, port, client)
-					
+
 				#now=True : on commence maintenant, pas besoin d'attendre le premier appel périodique
 				client["sendingDeferred"].start(1./self.fps, now=True)
 

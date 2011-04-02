@@ -21,13 +21,13 @@ class ServeurHttp(LineReceiver):
 	def __init__(self):
 		# Dit au protocole LineReceiver quel est le séparateur de fin de ligne.
 		self.delimiter = "\n"
-		
+
 	def addHeader(self, msg):
 		"""
 		Ajouter le header HTTP minimaliste au message que l'on envoie en réponse en calculant le
 		Content-length à la volée
 		"""
-		
+
 		header = "HTTP/1.1 200 OK" + SEP + "Server: localhost" + SEP + "Connection: Keep-Alive" + SEP + "Content-Type: text/txt" + SEP + "Content-Length: "
 		header += str(len(msg))
 		msg = header + SEP + SEP + msg
@@ -44,7 +44,7 @@ class ServeurHttp(LineReceiver):
 	def connectionMade(self):
 		print "[HTTP] client connecté"
 
-		
+
 
 class ServeurHTTPFactory(Factory):
 	"""
@@ -52,13 +52,13 @@ class ServeurHTTPFactory(Factory):
 	la Factory sert à rassembler le code et les attributs qui sont communs entre les différentes instances.
 	Comme par ex le catalogue.
 	"""
-	
+
 	# ServeurHTTP : classe à partir de laquelle la Factory va créer les instances
 	protocol = ServeurHttp
 
 	def __init__(self, catalogue):
 		self.cat = catalogue
-		
+
 		# pour chaque vidéo du catalogue, on regarde son protocole et on crée un objet qui correspond
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
