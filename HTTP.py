@@ -34,19 +34,31 @@ class ServeurHttp(LineReceiver):
 
 
 class ServeurHTTPFactory(Factory):
+	"""
+	Factory qui va créer des instances (une seule ici) d'un serveur HTTP minimaliste,
+	la Factory sert à rassembler le code et les attributs qui sont communs entre les différentes instances.
+	Comme par ex le catalogue.
+	"""
+	
+	# ServeurHTTP : classe à partir de laquelle la Factory va créer les instances
 	protocol = ServeurHttp
 
 	def __init__(self, catalogue):
 		self.cat = catalogue
+		
+		# pour chaque vidéo du catalogue, on regarde son protocole et on crée un objet qui correspond
 		for objet in self.cat.objects:
 			if objet[5] == "TCP_PULL":
 				reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
 			elif objet[5] == "TCP_PUSH":
-				#memo -> objet[6] : ips
+				#pour mémoire : objet[6] = ips de la vidéo
+				# le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
 				reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
 			elif objet[5] == "UDP_PULL":
 				reactor.listenUDP(objet[4], UDPPullControl(objet[1]))
 			elif objet[5] == "UDP_PUSH":
-				#memo -> objet[6] : ips
+				#pour mémoire : objet[6] = ips de la vidéo
+				# le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
 				reactor.listenUDP(objet[4], UDPPushControl(objet[1], objet[6]))
+
 		print "Catalogue chargé, le serveur est prêt :)\n"
