@@ -92,7 +92,7 @@ class TCPPullControlFactory(Factory):
     protocol = TCPPullControl
     tcpPullDataFactory = None # factory qui ca créer les canaux de données
 
-    def __init__(self, movie):
+    def __init__(self, movie, fileType):
         self.tcpPullDataFactory = Factory()
         self.tcpPullDataFactory.protocol = TCPPullData # la factory du canal de données crée un objet TCPPullData par vidéo visualisée
 
@@ -100,13 +100,15 @@ class TCPPullControlFactory(Factory):
         self.images.append("") #car un tableau commence à 0 et la première image à l'index 1
 
         imagesPath = os.path.join(VIDEOTHEQUE, movie)
-        # compte toutes les images (*.jpg) présentes dans le répertoire, attention si un fichier .jpg qui ne fait pas partie de la vidéo
+        
+        # on considère que si le type de la vidéo est JPEG, les images seront toutes en .jpeg (idem avec BMP : *.bmp)
+        # alors on compte toutes les images présentes dans le répertoire, attention si un fichier .jpeg qui ne fait pas partie de la vidéo
         # est présent il sera compté comme tel et posera problème
-        countImages = len(glob.glob1(imagesPath,"*.jpg"))
+        countImages = len(glob.glob1(imagesPath, "*." + fileType.lower()))
 
         for i in range(1, countImages + 1):
-            # charger 1.jpg, 2.jpg, 3.jpg etc...
-            f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
+            # charger 1.jpg, 2.jpg, 3.jpg etc... (ou 1.bmp, 2.bmp ...)
+            f = open(os.path.join(imagesPath, str(i) + "." + fileType.lower()), "rb")
             imageData = f.read()
             # les headers de chaque paquet, image par image, sont précalculés car ils ne changent pas à l'exécution
             self.images.append("%s%s%s%s%s" % (i, SEP, len(imageData), SEP,  imageData))

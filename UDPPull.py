@@ -13,7 +13,7 @@ class UDPPull(DatagramProtocol):
     Protocol créé 1 fois par vidéo qui va recevoir les requêtes des clients et leur envoyer les vidéos. En pull c'est le client qui demande
     chaque image de la vidéo 1 par 1, s'il ne demande rien on n'envoie rien.
     """
-    def __init__(self, movie):
+    def __init__(self, movie, fileType):
         print "[UDP Pull] Création du canal"
 
         # ce dictionnaire sert à mémoriser les informations de chaque client, contrairement à TCP où l'on utilise un mode connecté et donc un objet
@@ -24,13 +24,15 @@ class UDPPull(DatagramProtocol):
         self.images = []
         self.images.append("") #car ceci commence à 0 et la première image à l'index 1
         imagesPath = os.path.join(VIDEOTHEQUE, movie)
-        # compte toutes les images (*.jpg) présentes dans le répertoire, attention si un fichier .jpg qui ne fait pas partie de la vidéo
+        
+        # on considère que si le type de la vidéo est JPEG, les images seront toutes en .jpeg (idem avec BMP : *.bmp)
+        # alors on compte toutes les images présentes dans le répertoire, attention si un fichier .jpeg qui ne fait pas partie de la vidéo
         # est présent il sera compté comme tel et posera problème
-        countImages = len(glob.glob1(imagesPath,"*.jpg"))
+        countImages = len(glob.glob1(imagesPath, "*." + fileType.lower()))
 
         for i in range(1, countImages + 1):
-        # charger 1.jpg, 2.jpg, 3.jpg etc...
-            f = open(os.path.join(imagesPath, str(i) + ".jpg"), "rb")
+        # charger 1.jpg, 2.jpg, 3.jpg etc... (ou 1.bmp, 2.bmp ...)
+            f = open(os.path.join(imagesPath, str(i) + "." + fileType.lower()), "rb")
             self.images.append(f.read())
             f.close()
         print "a chargé %d images pour %s" % (countImages, movie)

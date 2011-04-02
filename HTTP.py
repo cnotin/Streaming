@@ -62,16 +62,16 @@ class ServeurHTTPFactory(Factory):
         # pour chaque vidéo du catalogue, on regarde son protocole et on crée un objet qui correspond
         for objet in self.cat.objects:
             if objet[5] == "TCP_PULL":
-                reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1]))
+                reactor.listenTCP(objet[4], TCPPullControlFactory(objet[1], objet[2]))
             elif objet[5] == "TCP_PUSH":
                 #pour mémoire : objet[6] = ips de la vidéo
                 # le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
-                reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[6]))
+                reactor.listenTCP(objet[4], TCPPushControlFactory(objet[1], objet[2], objet[6]))
             elif objet[5] == "UDP_PULL":
-                reactor.listenUDP(objet[4], UDPPull(objet[1]))
+                reactor.listenUDP(objet[4], UDPPull(objet[1], objet[2]))
             elif objet[5] == "UDP_PUSH":
                 #pour mémoire : objet[6] = ips de la vidéo
                 # le push a besoin de connaître ça pour savoir à quelle fréquence il doit pusher
-                reactor.listenUDP(objet[4], UDPPush(objet[1], objet[6]))
+                reactor.listenUDP(objet[4], UDPPush(objet[1], objet[2], objet[6]))
 
         print "Catalogue chargé, le serveur est prêt :)\n"
