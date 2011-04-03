@@ -1,9 +1,0 @@
-ServerAddress: 127.0.0.1
-ServerPort: 4590
-Object ID=1 name=wallpapers type=JPEG address=MYIP port=4591 protocol=TCP_PUSH ips=5
-Object ID=2 name=tophat type=JPEG address=MYIP port=4592 protocol=TCP_PUSH ips=25
-Object ID=3 name=mavideo type=JPEG address=MYIP port=4593 protocol=TCP_PUSH ips=15
-Object ID=4 name=mavideo type=JPEG address=MYIP port=4594 protocol=TCP_PUSH ips=1
-Object ID=5 name=tophat type=JPEG address=MYIP port=4595 protocol=TCP_PUSH ips=1
-Object ID=6 name=nombres type=BMP address=MYIP port=4596 protocol=TCP_PUSH ips=2
-Object ID=8 name=tophat type=JPEG address=MYIP port=4598 protocol=TCP_PULL ips=25
